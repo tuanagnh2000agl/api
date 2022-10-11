@@ -138,8 +138,14 @@
 </head>
 
 <body>
-    <ul id="categories"></ul>
-    <div id="Tab"></div>
+    <ul id="categories">
+        <li data-id="10">
+            <a href="#">
+                <span>All</span>
+            </a>
+        </li>
+    </ul>
+    <ul id="Tab"></ul>
     <div class="loading">
         <div class="lds-roller">
             <div></div>
@@ -155,7 +161,58 @@
     <script>
         const GET = "GET";
         const loadding = $('.loading');
+        var categoryName = [];
+
+         // load mac dinh
+         function allPost(){
+            const URL_API = `http://localhost/task13/wp-json/wp/v2/posts?&per_page=5`;
+            $.ajax({
+                url: URL_API,
+                type: GET,
+                dataType: "json",
+                beforeSend: function () {
+                    loadding.addClass('active');
+                },
+                success: function (res) {
+                    let post = "";
+                    res.map((item, index) => {
+                        var test = item.categories;
+                        const date  = new Date(item.date);
+                        const customDate = date.toLocaleDateString("hi-IN");       
+                        let nameCategory = getNameCategory(item.categories, categoryName);
+                        post += `
+                        <li class="post_items>
+                            <span class="datepost">${customDate}</span>
+                                ${nameCategory}
+                                <a href="${item.link}">${item.title.rendered}</a>
+                            </li>
+                        `
+                    })
+                    $('#Tab').html(post);
+                },
+                complete: function (res) {
+                    loadding.removeClass('active');
+                },
+                error: function (error) {
+                }
+            });
+        }
+        // 
+
+        function getNameCategory(post_categories, categories){
+            let nameCategory = ``;
+            for(let i = 0; i< post_categories.length; i++){
+                for(let j = 1; j< categories.length; j++){
+                    if(post_categories[i] === categories[j].id){
+                        // console.log(categoryName[j].name)
+                        nameCategory += `<a href="${categories[j].link}" class="c-label">${categories[j].name}</a>`;
+                    }
+                }
+            }
+            return nameCategory;
+        }
         async function getTabCategory(categories) {
+            categoryName = categories;
             let html_category = "";
             if (categories.length > 0) {
                 await categories.map((item, index) => {
@@ -171,23 +228,36 @@
             await $('body #categories li').on('click', function (e) {
                 e.preventDefault();
                 const category_id = $(this).data('id');
-                const URL_API = `https://tamtrathai.com.vn/wp-json/wp/v2/posts?categories=${category_id}`;
+                console.log(category_id);
+                if(category_id === 10){
+                    console.log(true)
+                    var URL_API = `http://localhost/task13/wp-json/wp/v2/posts?per_page=5`;
+                }else{
+                    console.log(false)
+                    var URL_API = `http://localhost/task13/wp-json/wp/v2/posts?categories=${category_id}&per_page=5`;
+                }
+
                 $.ajax({
                     url: URL_API,
                     type: GET,
                     dataType: "json",
                     beforeSend: function () {
-                        // add loadding
                         loadding.addClass('active');
                     },
                     success: function (res) {
                         let post = "";
                         res.map((item, index) => {
+                            var test = item.categories;
+                            const date  = new Date(item.date);
+                            const customDate = date.toLocaleDateString("hi-IN");       
+                            let nameCategory = getNameCategory(item.categories, categoryName);
                             post += `
-                                <div class="post_items">
+                            <li class="post_items>
+                                <span class="datepost">${customDate}</span>
+                                    ${nameCategory}
                                     <a href="${item.link}">${item.title.rendered}</a>
-                                </div>
-                            `;
+                                </li>
+                            `
                         })
                         $('#Tab').html(post);
                     },
@@ -195,14 +265,13 @@
                         loadding.removeClass('active');
                     },
                     error: function (error) {
-
                     }
                 });
             });
-
         }
+       
         async function getListCategoryId() {
-            const URL_API = "https://tamtrathai.com.vn/wp-json/wp/v2/categories";
+            const URL_API = "http://localhost/task13/wp-json/wp/v2/categories";
             await $.ajax({
                 url: URL_API,
                 type: GET,
@@ -218,12 +287,11 @@
                     loadding.removeClass('active');
                 },
                 error: function (error) {
-
                 }
             });
         }
         getListCategoryId();
-        getTabCategory();
+        allPost();
     </script>
 </body>
 
